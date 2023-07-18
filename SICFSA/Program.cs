@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace SICFSA
@@ -8,27 +8,26 @@ namespace SICFSA
     {
         static void Main(string[] args)
         {
-        SaveNewUser();
-        }
-            
-        static void SaveNewUser()
-        {
+
             newUser register = new newUser();
 
             Console.WriteLine("Enter your name: ");
-
             register.firstName = Console.ReadLine();
 
 
             Console.WriteLine("Enter your surname:");
             register.lastName = Console.ReadLine();
 
-            Console.WriteLine("Enter your age:");
+            Console.WriteLine("Enter your age: ");
             register.age = Convert.ToInt32(Console.ReadLine());
 
+            SaveNewUser(register);
+        }
+            
+        static void SaveNewUser(newUser User)
+        {
 
-            File.AppendAllText("save.txt", $"{register.firstName}-{register.lastName}-{register.age} {Environment.NewLine}");
-
+            File.AppendAllText("save.txt", $"{User.firstName}-{User.lastName}-{User.age} {Environment.NewLine}");
             string readText = File.ReadAllText("Save.txt");
         }
     }
