@@ -13,8 +13,7 @@ namespace SICFSA
 
             Console.WriteLine("Enter your name: ");
             register.firstName = Console.ReadLine();
-
-
+            
             Console.WriteLine("Enter your surname:");
             register.lastName = Console.ReadLine();
 
