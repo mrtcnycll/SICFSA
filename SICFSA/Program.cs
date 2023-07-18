@@ -26,7 +26,6 @@ namespace SICFSA
 
                 string readText = File.ReadAllText("Save.txt");
             }
-
         }
         class newUser
         { 
