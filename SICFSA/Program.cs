@@ -1,86 +1,160 @@
-using Microsoft.VisualBasic.FileIO;
 using System;
-using System.ComponentModel;
+using System.Collections.Generic;
 using System.IO;
 
 namespace SICFSA
-
 {
+    class Student
+    {
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public int Age { get; set; }
+
+        public override string ToString()
+        {
+            return $"{FirstName} {LastName}, Age: {Age}";
+        }
+    }
+
     class Program
     {
-        static void Main(string[] args)
+        static List<Student> students = new List<Student>();
+        static string filePath = "students.txt";
+
+        static void Main()
         {
+            LoadStudentsFromFile();
 
-            newUser register = new newUser();
-
-            Console.WriteLine("What would you like to do? ");
-            Console.WriteLine("Add student, Delete student or display students");
-            Console.WriteLine("----------------------------------------------");
-            string x = Console.ReadLine().ToLower();
-
-            if (x == "add student" || x == "add")
+            while (true)
             {
-                Console.WriteLine("Enter your name: ");
-                register.firstName = Console.ReadLine();
+                Console.WriteLine("1 - Add Student");
+                Console.WriteLine("2 - Delete Student");
+                Console.WriteLine("3 - List Students");
+                Console.WriteLine("4 - Exit");
+                Console.Write("Select an option (1/2/3/4): ");
+                string choice = Console.ReadLine();
 
-                Console.WriteLine("Enter your surname:");
-                register.lastName = Console.ReadLine();
+                switch (choice)
+                {
+                    case "1":
+                        AddStudent();
+                        break;
+                    case "2":
+                        DeleteStudent();
+                        break;
+                    case "3":
+                        ListStudents();
+                        break;
+                    case "4":
+                        SaveStudentsToFile();
+                        return;
+                    default:
+                        Console.WriteLine("Invalid choice. Please try again.");
+                        break;
+                }
 
-                Console.WriteLine("Enter your age: ");
-                register.age = Convert.ToInt32(Console.ReadLine());
-
-                SaveNewUser(register);
-            }
-            else if (x == "delete student" || x == "delete")
-            {
-                Console.WriteLine("----------------------------");
-                DisplaySavedUsers();
-                Console.WriteLine("----------------------------");
-                Console.WriteLine("Enter the index of the student you want to delete:");
-                int indexToDelete = Convert.ToInt32(Console.ReadLine());
-                DeleteUser(indexToDelete);
-            }
-            else if (x == "display student" || x=="display")
-            {
-                DisplaySavedUsers();
-            }
-            else
-            {
-                Console.WriteLine("You cant do that");
+                Console.WriteLine();
             }
         }
-            
-        static void SaveNewUser(newUser User)
-        {
 
-            File.AppendAllText("save.txt", $"{User.firstName}-{User.lastName}-{User.age} {Environment.NewLine}");
-            string readText = File.ReadAllText("Save.txt");
-        }
-        static void DisplaySavedUsers()
+        static void AddStudent()
         {
-            string readText = File.ReadAllText("save.txt");
-            Console.WriteLine(Environment.NewLine +"Saved Students:" + Environment.NewLine);
-            Console.WriteLine(readText);
-        }
-        static void DeleteUser(int index)
-        {
-            string[] lines = File.ReadAllLines("save.txt");
-            if (index >= 1 && index <= lines.Length)
+            Console.Write("First Name: ");
+            string firstName = Console.ReadLine();
+
+            Console.Write("Last Name: ");
+            string lastName = Console.ReadLine();
+
+            Console.Write("Age: ");
+            int age = int.Parse(Console.ReadLine());
+
+            Student student = new Student
             {
-                lines[index - 1] = null;
-                File.WriteAllLines("save.txt", lines);
+                FirstName = firstName,
+                LastName = lastName,
+                Age = age
+            };
+
+            students.Add(student);
+            Console.WriteLine("Student added successfully.");
+        }
+
+        static void DeleteStudent()
+        {
+            ListStudents();
+
+            Console.Write("Enter the name of the student to delete: ");
+            string nameToDelete = Console.ReadLine();
+
+            Student studentToDelete = students.Find(s => s.FirstName.Equals(nameToDelete, StringComparison.OrdinalIgnoreCase));
+
+            if (studentToDelete != null)
+            {
+                students.Remove(studentToDelete);
                 Console.WriteLine("Student deleted successfully.");
+
+                Console.WriteLine("Current Students List:");
+                ListStudents();
             }
             else
             {
-                Console.WriteLine("Invalid index no student deleted!");
+                Console.WriteLine("Student with the specified name not found. Please try again.");
+            }
+        }
+
+        static void ListStudents()
+        {
+            if (students.Count == 0)
+            {
+                Console.WriteLine("No registered students.");
+                return;
+            }
+            else
+            {
+                Console.WriteLine("Registered Students:");
+                for (int i = 0; i < students.Count; i++)
+                {
+                    Console.WriteLine($"{i + 1}. {students[i]}");
+                }
+            }
+        }
+
+        static void LoadStudentsFromFile()
+        {
+            if (File.Exists(filePath))
+            {
+                string[] lines = File.ReadAllLines(filePath);
+                foreach (string line in lines)
+                {
+                    string[] parts = line.Split(',');
+                    if (parts.Length == 3)
+                    {
+                        string firstName = parts[0].Trim();
+                        string lastName = parts[1].Trim();
+                        int age = int.Parse(parts[2].Trim());
+
+                        Student student = new Student
+                        {
+                            FirstName = firstName,
+                            LastName = lastName,
+                            Age = age
+                        };
+
+                        students.Add(student);
+                    }
+                }
+            }
+        }
+
+        static void SaveStudentsToFile()
+        {
+            using (StreamWriter writer = new StreamWriter(filePath))
+            {
+                foreach (Student student in students)
+                {
+                    writer.WriteLine($"{student.FirstName}, {student.LastName}, {student.Age}");
+                }
             }
         }
     }
-        class newUser
-        { 
-            public string firstName = "";
-            public string lastName = "";
-            public int age = 0;
-        }
 }
