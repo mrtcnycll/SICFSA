@@ -32,17 +32,21 @@ namespace SICFSA
                 Console.WriteLine("3 - List Students");
                 Console.WriteLine("4 - Exit");
                 Console.Write("Select an option (1/2/3/4): ");
+
                 string choice = Console.ReadLine();
 
                 switch (choice)
                 {
                     case "1":
                         AddStudent();
+                        SaveStudentsToFile();
                         break;
                     case "2":
                         DeleteStudent();
+                        SaveStudentsToFile();
                         break;
                     case "3":
+                        SaveStudentsToFile();
                         ListStudents();
                         break;
                     case "4":
@@ -93,7 +97,6 @@ namespace SICFSA
                 students.Remove(studentToDelete);
                 Console.WriteLine("Student deleted successfully.");
 
-                Console.WriteLine("Current Students List:");
                 ListStudents();
             }
             else
@@ -148,6 +151,19 @@ namespace SICFSA
 
         static void SaveStudentsToFile()
         {
+            int n = students.Count;
+            for (int i = 0; i < n - 1; i++)
+            {
+                for (int j = 0; j < n - i - 1; j++)
+                {
+                    if (string.Compare(students[j].LastName, students[j + 1].LastName) > 0)
+                    {
+                        Student temp = students[j];
+                        students[j] = students[j + 1];
+                        students[j + 1] = temp;
+                    }
+                }
+            }
             using (StreamWriter writer = new StreamWriter(filePath))
             {
                 foreach (Student student in students)
