@@ -30,8 +30,9 @@ namespace SICFSA
                 Console.WriteLine("1 - Add Student");
                 Console.WriteLine("2 - Delete Student");
                 Console.WriteLine("3 - List Students");
-                Console.WriteLine("4 - Exit");
-                Console.Write("Select an option (1/2/3/4): ");
+                Console.WriteLine("4 - Update Student");
+                Console.WriteLine("5 - Exit");
+                Console.Write("Select an option (1/2/3/4/5): ");
 
                 string choice = Console.ReadLine();
 
@@ -50,6 +51,10 @@ namespace SICFSA
                         ListStudents();
                         break;
                     case "4":
+                        UpdateStudent();
+                        SaveStudentsToFile();
+                        break;
+                    case "5":
                         SaveStudentsToFile();
                         return;
                     default:
@@ -172,5 +177,52 @@ namespace SICFSA
                 }
             }
         }
+        static void UpdateStudent()
+        {
+            ListStudents();
+
+            Console.Write("Enter the last name of the student to update: ");
+            string lastNameToUpdate = Console.ReadLine();
+
+            Student studentToUpdate = students.Find(s => s.LastName.Equals(lastNameToUpdate, StringComparison.OrdinalIgnoreCase));
+
+            if (studentToUpdate != null)
+            {
+                Console.WriteLine($"Updating student: {studentToUpdate}");
+
+                Console.WriteLine("Select attribute to update:");
+                Console.WriteLine("1 - First Name");
+                Console.WriteLine("2 - Last Name");
+                Console.WriteLine("3 - Age");
+                Console.Write("Enter option (1/2/3): ");
+                string updateChoice = Console.ReadLine();
+                switch (updateChoice)
+                {
+                    case "1":
+                        Console.Write("Enter the new First Name: ");
+                        studentToUpdate.FirstName = Console.ReadLine();
+                        break;
+                    case "2":
+                        Console.Write("Enter the new Last Name: ");
+                        studentToUpdate.LastName = Console.ReadLine();
+                        break;
+                    case "3":
+                        Console.Write("Enter the new Age: ");
+                        studentToUpdate.Age = int.Parse(Console.ReadLine());
+                        break;
+                    default:
+                        Console.WriteLine("Invalid choice. No attributes were updated.");
+                        break;
+                }
+                Console.WriteLine("Student updated successfully.");
+                SaveStudentsToFile();
+                ListStudents();
+            }
+            else
+            {
+                Console.WriteLine("Student with the specified last name not found. Please try again.");
+            }
+        }
     }
+
 }
