@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Data.SqlClient;
+using System.ComponentModel.Design;
 
 namespace SICFSA
 {
+
     class Student
     {
         public string FirstName { get; set; }
@@ -15,15 +18,62 @@ namespace SICFSA
             return $"{FirstName} {LastName}, Age: {Age}";
         }
     }
-
+    class DatabaseManager
+    {
+        private string connectionString = "Data Source=(LocalDB)\\MSSQLLocalDB;AttachDbFilename=C:\\Users\\mrtcn\\source\\repos\\SICFSA\\SICFSA\\Database.mdf;Integrated Security=True";
+        public string ConnectionString => connectionString;
+        public void AddStudent(Student student)
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string query = "INSERT INTO Students (FirstName, LastName, Age) VALUES (@FirstName, @LastName, @Age)";
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@FirstName", student.FirstName);
+                    command.Parameters.AddWithValue("@LastName", student.LastName);
+                    command.Parameters.AddWithValue("@Age", student.Age);
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+        public List<Student> GetStudents()
+        {
+            List<Student> students = new List<Student>();
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string query = "SELECT FirstName, LastName, Age FROM Students";
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            Student student = new Student
+                            {
+                                FirstName = reader.GetString(0),
+                                LastName = reader.GetString(1),
+                                Age = reader.GetInt32(2)
+                            };
+                            students.Add(student);
+                        }
+                    }
+                }
+            }
+            return students;
+        }
+    }
     class Program
     {
         static List<Student> students = new List<Student>();
         static string filePath = "students.txt";
 
+        static DatabaseManager dbManager = new DatabaseManager();
         static void Main()
         {
             LoadStudentsFromFile();
+            bool db = true;
 
             while (true)
             {
@@ -31,7 +81,8 @@ namespace SICFSA
                 Console.WriteLine("2 - Delete Student");
                 Console.WriteLine("3 - List Students");
                 Console.WriteLine("4 - Update Student");
-                Console.WriteLine("5 - Exit");
+                Console.WriteLine("5 - Database Mode (" + (db ? "ON" : "OFF") + ")");
+                Console.WriteLine("6 - Exit");
                 Console.Write("Select an option (1/2/3/4/5): ");
 
                 string choice = Console.ReadLine();
@@ -39,22 +90,56 @@ namespace SICFSA
                 switch (choice)
                 {
                     case "1":
-                        AddStudent();
-                        SaveStudentsToFile();
+                        if (db)
+                        {
+                            AddStudentToDatabase();
+                        }
+                        else
+                        {
+                            AddStudent();
+                            SaveStudentsToFile();
+                        }
                         break;
                     case "2":
-                        DeleteStudent();
-                        SaveStudentsToFile();
+                        if (db)
+                        {
+                            DeleteStudentFromDatabase();
+                        }
+                        else
+                        {
+                            DeleteStudent();
+                            SaveStudentsToFile();
+                        }
                         break;
                     case "3":
-                        SaveStudentsToFile();
-                        ListStudents();
+                        if (db)
+                        {
+                            ListStudentsInDatabase();
+                        }
+                        else
+                        {
+                            SaveStudentsToFile();
+                            ListStudents();
+                        }
                         break;
                     case "4":
                         UpdateStudent();
                         SaveStudentsToFile();
                         break;
                     case "5":
+                        db = !db;
+                        Console.WriteLine("Database is now " + (db ? "ON" : "OFF"));
+
+                        if (db)
+                        {
+                            Console.WriteLine("Switched to Database mode.");
+                        }
+                        else
+                        {
+                            Console.WriteLine("Switched to Text mode.");
+                        }
+                        break;
+                    case "6":
                         SaveStudentsToFile();
                         return;
                     default:
@@ -223,6 +308,75 @@ namespace SICFSA
                 Console.WriteLine("Student with the specified last name not found. Please try again.");
             }
         }
-    }
+        static void AddStudentToDatabase()
+        {
+            Console.Write("First Name: ");
+            string firstName = Console.ReadLine().ToLower();
 
+            Console.Write("Last Name: ");
+            string lastName = Console.ReadLine().ToLower();
+
+            Console.Write("Age: ");
+            int age = int.Parse(Console.ReadLine());
+
+            Student student = new Student
+            {
+                FirstName = firstName,
+                LastName = lastName,
+                Age = age
+            };
+
+            dbManager.AddStudent(student);
+            Console.WriteLine("Student added to the database successfully.");
+        }
+        static void ListStudentsInDatabase()
+        {
+
+            List<Student> studentsFromDatabase = dbManager.GetStudents();
+
+            if (studentsFromDatabase.Count == 0)
+            {
+                Console.WriteLine("No registered students in the database.");
+                return;
+            }
+            else
+            {
+                Console.WriteLine("Registered Students in the Database:");
+                for (int i = 0; i < studentsFromDatabase.Count; i++)
+                {
+                    Console.WriteLine($"{i + 1}. {studentsFromDatabase[i]}");
+                }
+            }
+        }
+        static void DeleteStudentFromDatabase()
+        {
+            ListStudentsInDatabase();
+
+            Console.Write("Enter the last name of the student to delete: ");
+            string lastNameToDelete = Console.ReadLine().ToLower();
+
+            // Öğrenciyi veritabanından silme işlemi
+            using (SqlConnection connection = new SqlConnection(dbManager.ConnectionString))
+            {
+                connection.Open();
+                string query = "DELETE FROM Students WHERE LastName = @LastName";
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@LastName", lastNameToDelete);
+                    int rowsAffected = command.ExecuteNonQuery();
+
+                    if (rowsAffected > 0)
+                    {
+                        Console.WriteLine("Student deleted from the database successfully.");
+                        ListStudentsInDatabase();
+                    }
+                    else
+                    {
+                        Console.WriteLine("Student with the specified last name not found in the database.");
+                    }
+                }
+            }
+        }
+    }
 }
+
